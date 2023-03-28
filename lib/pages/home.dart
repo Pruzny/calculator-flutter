@@ -10,9 +10,15 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    Orientation orientation = MediaQuery.of(context).orientation;
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
+
+    double? firstNumber;
+    double? secondNumber;
+    double? result;
+    String outputText = '';
+
+    TextEditingController textController = TextEditingController(text: outputText);
     
     return Scaffold(
       appBar: AppBar(
@@ -29,15 +35,24 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Container(
-              height: height * 0.15,
+              height: height * 0.2,
               alignment: Alignment.topRight,
               padding: EdgeInsets.only(right: width*0.05),
-              child: Text(
-                orientation == Orientation.portrait ? 'Portrait' : 'Landscape',
-                style: const TextStyle(fontSize: 32),
+              child: TextFormField(
+                keyboardType: TextInputType.none,
+                autofocus: true,
+                textAlign: TextAlign.end,
+                maxLines: 1,
+                controller: textController,
+                decoration: const InputDecoration(
+                  border: InputBorder.none
+                ),
+                style: TextStyle(
+                  fontSize: width/10,
+                ),
               ),
             ),
-            createRow(items: ['C', '( )', '%', '÷'], width: width),
+            createRow(items: ['C', ' 𝑥²', '%', '÷'], width: width),
             createRow(items: ['7', '8', '9', '×'], width: width),
             createRow(items: ['4', '5', '6', '-'], width: width),
             createRow(items: ['1', '2', '3', '+'], width: width),
