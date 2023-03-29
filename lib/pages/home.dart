@@ -10,7 +10,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   double? _result;
   String _operation = '';
-  String _outputText = '';
+  String _historyText = '';
+  String _numberText = '';
   bool _blockOutput = false;
   bool _reset = false;
 
@@ -19,7 +20,8 @@ class _HomeState extends State<Home> {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    TextEditingController textController = TextEditingController(text: _outputText);
+    TextEditingController textController = TextEditingController(text: _numberText);
+    TextEditingController historyController = TextEditingController(text: _historyText);
     
     return Scaffold(
       appBar: AppBar(
@@ -35,29 +37,58 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Container(
-              height: height * 0.2,
-              alignment: Alignment.topRight,
-              padding: EdgeInsets.only(right: width*0.05, left: width*0.05),
-              child: TextFormField(
-                keyboardType: TextInputType.none,
-                autofocus: true,
-                textAlign: TextAlign.end,
-                maxLines: 1,
-                controller: textController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none
+            Column(
+              children: [
+                Container(
+                  alignment: Alignment.topRight,
+                  padding: EdgeInsets.only(right: width*0.05, left: width*0.05),
+                  child: TextFormField(
+                    maxLines: 1,
+                    controller: historyController,
+                    textAlign: TextAlign.end,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none
+                    ),
+                    style: TextStyle(
+                      fontSize: width/20,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
-                style: TextStyle(
-                  fontSize: width/10,
+                Container(
+                  height: height * 0.1,
+                  alignment: Alignment.topRight,
+                  padding: EdgeInsets.only(right: width*0.05, left: width*0.05),
+                  child: TextFormField(
+                    keyboardType: TextInputType.none,
+                    autofocus: true,
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    controller: textController,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none
+                    ),
+                    style: TextStyle(
+                      fontSize: width/10,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            SizedBox(
+              height: height * 0.64,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  createRow(items: ['C', ' 𝑥²', '%', '÷'], width: width),
+                  createRow(items: ['7', '8', '9', '×'], width: width),
+                  createRow(items: ['4', '5', '6', '-'], width: width),
+                  createRow(items: ['1', '2', '3', '+'], width: width),
+                  createRow(items: ['±', '0', '.', '='], width: width),
+                ],
               ),
             ),
-            createRow(items: ['C', ' 𝑥²', '%', '÷'], width: width),
-            createRow(items: ['7', '8', '9', '×'], width: width),
-            createRow(items: ['4', '5', '6', '-'], width: width),
-            createRow(items: ['1', '2', '3', '+'], width: width),
-            createRow(items: ['±', '0', '.', '='], width: width),
           ],
         ),
       ),
@@ -79,14 +110,14 @@ class _HomeState extends State<Home> {
       case '%':
         return firstNumber / 100;
       default:
-        _outputText = 'Internal Error';
+        _numberText = 'Internal Error';
         _blockOutput = true;
         return null;
     }
   }
 
   void showResult() {
-    _outputText = '${_result == _result!.roundToDouble() ? _result!.round() : _result}';
+    _numberText = '${_result == _result!.roundToDouble() ? _result!.round() : _result}';
     setState(() {});
   }
 
@@ -95,28 +126,39 @@ class _HomeState extends State<Home> {
       double? buttonNumber = double.tryParse(button);
       if (buttonNumber != null) {
         if (_reset) {
-          _outputText = '';
+          _numberText = '';
+          _historyText = '';
           _reset = false;
         }
-        _outputText += button;
+        _numberText += button;
       } else {
-        double? number = double.tryParse(_outputText);
+        double? number = double.tryParse(_numberText);
         if (number != null) {
           if (operators.contains(button)) {
-            _outputText = '';
+            _historyText += _numberText + button;
+            _numberText = '';
             _result = _result != null && _operation != '' ? calculate(_result!, number, _operation) : number;
             _operation = button;
+            _reset = false;
           } else if (directOperators.contains(button)) {
             _result = calculate(number, 0, button);
-            _operation = button;
+            _historyText += _numberText;
+            if (button == ' 𝑥²') {
+              _historyText += '²=';
+            } else {
+              _historyText += '$button=';
+            }
+            _reset = true;
             showResult();
-          } else if (button == '=' && _result != null) {
+          } else if (button == '=' && _result != null && _operation != '') {
+            _historyText += _numberText + button;
             _result = calculate(_result!, number, _operation);
+            _operation = '';
             showResult();
             _reset = true;
-          } else if (button == '.' && !_outputText.contains('.')) {
-            _outputText += '.';
-          } else if (button == '±' && _outputText != '') {
+          } else if (button == '.' && !_numberText.contains('.')) {
+            _numberText += '.';
+          } else if (button == '±' && _numberText != '') {
             _result = -number;
             showResult();
           }
@@ -126,7 +168,7 @@ class _HomeState extends State<Home> {
 
     if (button == 'C') {
       _historyText = '';
-      _outputText = '';
+      _numberText = '';
       _blockOutput = false;
       _operation = '';
       _result = null;
